@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kc_payroll_full_hr_payslip_import_input,kc_payroll_full.access_hr_payslip_import_input,kc_payroll_full.model_hr_payslip_import_input,base.group_user,1,1,1,1

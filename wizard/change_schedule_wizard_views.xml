@@ -1,0 +1,43 @@
+<odoo>
+    <!-- Action para abrir el wizard -->
+    <record id="action_change_work_schedule_wizard" model="ir.actions.act_window">
+        <field name="name">Cambiar horario de trabajo</field>
+        <field name="res_model">hr.change.work.schedule.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menú dentro de Configuración de Nómina -->
+    <menuitem
+            id="menu_change_work_schedule"
+            name="Cambiar horario de trabajo"
+            parent="hr.menu_hr_root"
+            action="action_change_work_schedule_wizard"
+            sequence="10"
+    />
+
+
+    <!-- Formulario del wizard -->
+    <record id="view_change_work_schedule_wizard_form" model="ir.ui.view">
+        <field name="name">change.work.schedule.wizard.form</field>
+        <field name="model">hr.change.work.schedule.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cambiar horario de trabajo">
+                <group>
+                    <field name="old_calendar_id"/>
+                    <field name="employee_ids" widget="many2many_tags"/>
+                    <field name="new_calendar_id"/>
+                </group>
+                <footer>
+                    <button
+                            string="Aplicar"
+                            type="object"
+                            name="apply_changes"
+                            class="btn-primary"
+                    />
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

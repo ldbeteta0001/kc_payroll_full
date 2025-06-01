@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Tu vista de formulario existente... -->
+        <record id="hr_attendance_view_form_he_inherit" model="ir.ui.view">
+            <field name="name">hr.attendance.view.form.he.inherit</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.hr_attendance_view_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//sheet" position="before">
+                    <header>
+                        <button name="action_recompute_he"
+                                type="object"
+                                string="Recalcular Horas"
+                                class="oe_highlight"
+                                icon="fa-refresh"/>
+                        <button name="debug_he_calculation"
+                                type="object"
+                                string="Debug"
+                                class="btn-secondary"
+                                icon="fa-bug"
+                                groups="base.group_no_one"/>
+                    </header>
+                </xpath>
+
+                <!-- Campos HE tras overtime_hours con mejor formato -->
+                <xpath expr="//field[@name='overtime_hours']" position="after">
+                    <separator string="Detalle Horas Extra Honduras" colspan="3"/>
+
+                        <field name="he25"
+                               string="HE 25%"
+                               widget="float_time"
+                               readonly="1"
+                               decoration-info="he25 > 0"/>
+                        <field name="he50"
+                               string="HE 50%"
+                               widget="float_time"
+                               readonly="1"
+                               decoration-warning="he50 > 0"/>
+                        <field name="he75"
+                               string="HE 75%"
+                               widget="float_time"
+                               readonly="1"
+                               decoration-danger="he75 > 0"/>
+                        <field name="sabado_acum"
+                               string="Horas Acumuladas Sábado"
+                               widget="float_time"
+                               readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Vista de lista (tree) para hr.attendance -->
+        <record id="hr_attendance_view_tree_he_inherit" model="ir.ui.view">
+            <field name="name">hr.attendance.view.tree.he.inherit</field>
+            <field name="model">hr.attendance</field>
+            <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='worked_hours']" position="after">
+                    <field name="he25"
+                           string="HE 25%"
+                           widget="float_time"
+                           optional="show"
+                           decoration-info="he25 > 0"/>
+                    <field name="he50"
+                           string="HE 50%"
+                           widget="float_time"
+                           optional="show"
+                           decoration-warning="he50 > 0"/>
+                    <field name="he75"
+                           string="HE 75%"
+                           widget="float_time"
+                           optional="show"
+                           decoration-danger="he75 > 0"/>
+                    <field name="sabado_acum"
+                           string="Sábado Acum"
+                           widget="float_time"
+                           optional="hide"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

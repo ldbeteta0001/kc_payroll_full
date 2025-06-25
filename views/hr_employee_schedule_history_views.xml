@@ -1,0 +1,144 @@
+<odoo>
+    <!-- Vista lista del historial con filtros mejorados -->
+    <record id="view_hr_employee_schedule_history_tree" model="ir.ui.view">
+        <field name="name">hr.employee.schedule.history.tree</field>
+        <field name="model">hr.employee.schedule.history</field>
+        <field name="arch" type="xml">
+            <tree string="Historial de horarios" decoration-info="is_current == True">
+                <field name="employee_id"/>
+                <field name="previous_calendar_id" string="Horario anterior"/>
+                <field name="resource_calendar_id" string="Horario actual"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="is_current" column_invisible="1"/>
+                <field name="changed_by"/>
+                <field name="reason"/>
+                <button name="apply_current_schedule"
+                        string="✅ Aplicar"
+                        type="object"
+                        class="btn-primary btn-sm"
+                        invisible="is_current == True"
+                        confirm="¿Aplicar este registro como horario actual del empleado?"
+                        help="Aplica este registro y actualiza empleado/contrato"/>
+                <button name="copy_and_create_schedule"
+                        string="📝 Copiar y Crear"
+                        type="object"
+                        class="btn-secondary btn-sm"
+                        invisible="is_current == True"
+                        confirm="¿Crear nuevo registro desde hoy basado en este horario?"
+                        help="Crea nuevo registro desde hoy con este horario"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda mejorada para rangos -->
+    <record id="view_hr_employee_schedule_history_search" model="ir.ui.view">
+        <field name="name">hr.employee.schedule.history.search</field>
+        <field name="model">hr.employee.schedule.history</field>
+        <field name="arch" type="xml">
+            <search string="Buscar historial de horarios">
+                <field name="employee_id"/>
+                <field name="resource_calendar_id"/>
+                <field name="reason"/>
+                <separator/>
+                <filter name="current" string="Actuales" domain="[('is_current', '=', True)]"/>
+                <filter name="historical" string="Históricos" domain="[('is_current', '=', False)]"/>
+                <separator/>
+                <filter name="this_week" string="Esta semana"
+                        domain="[('date_from', '&lt;=', context_today().strftime('%Y-%m-%d')),
+                                 '|', ('date_to', '&gt;=', context_today().strftime('%Y-%m-%d')), ('date_to', '=', False)]"/>
+                <filter name="next_week" string="Próxima semana"
+                        domain="[('date_from', '&gt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Empleado" name="group_employee" domain="[]" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Horario" name="group_calendar" domain="[]" context="{'group_by': 'resource_calendar_id'}"/>
+                    <filter string="Fecha desde" name="group_date_from" domain="[]" context="{'group_by': 'date_from'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Vista formulario del historial -->
+    <record id="view_hr_employee_schedule_history_form" model="ir.ui.view">
+        <field name="name">hr.employee.schedule.history.form</field>
+        <field name="model">hr.employee.schedule.history</field>
+        <field name="arch" type="xml">
+            <form string="Historial de horario">
+                <header>
+                    <button name="apply_current_schedule"
+                            string="✅ Aplicar este registro"
+                            type="object"
+                            class="btn-primary"
+                            invisible="is_current == True"
+                            confirm="¿Aplicar este registro como horario actual?"/>
+                    <button name="copy_and_create_schedule"
+                            string="📝 Copiar y crear desde hoy"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="is_current == True"
+                            confirm="¿Crear nuevo registro desde hoy basado en este?"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_employee" icon="fa-user">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Ver empleado</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name"/>
+                        </h1>
+                        <div class="o_row" invisible="is_current == False">
+                            <span class="badge badge-success">Horario Actual</span>
+                        </div>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="previous_calendar_id"/>
+                            <field name="resource_calendar_id"/>
+                            <field name="is_current" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="changed_by"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para aplicar múltiples horarios -->
+    <record id="action_apply_multiple_schedules" model="ir.actions.server">
+        <field name="name">Aplicar horarios seleccionados</field>
+        <field name="model_id" ref="model_hr_employee_schedule_history"/>
+        <field name="binding_model_id" ref="model_hr_employee_schedule_history"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_apply_multiple_schedules()</field>
+    </record>
+
+    <!-- Menú para el historial -->
+    <record id="action_hr_employee_schedule_history" model="ir.actions.act_window">
+        <field name="name">Historial de horarios</field>
+        <field name="res_model">hr.employee.schedule.history</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_hr_employee_schedule_history_search"/>
+        <field name="context">{'search_default_group_employee': 1}</field>
+    </record>
+
+    <menuitem id="menu_hr_employee_schedule_history"
+              name="Historial de horarios"
+              parent="hr.menu_hr_root"
+              action="action_hr_employee_schedule_history"
+              sequence="20"/>
+
+</odoo>

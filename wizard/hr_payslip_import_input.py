@@ -1,8 +1,8 @@
-
 import base64
 import pandas as pd
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError
+
 
 class HrPayslipImportInput(models.TransientModel):
     _name = 'hr.payslip.import.input'
@@ -17,9 +17,20 @@ class HrPayslipImportInput(models.TransientModel):
         # Decodifica el archivo y lo lee en un DataFrame de Pandas
         try:
             file_data = base64.b64decode(self.file)
-            df = pd.read_excel(file_data)
+            df = pd.read_excel(file_data, sheet_name='Import')
         except Exception as e:
             raise ValidationError("Error al leer el archivo: %s" % str(e))
+
+        # Limpiar datos: eliminar filas con valores NaN en columnas críticas
+        df = df.dropna(subset=['default_code', 'code', 'amount'])
+
+        # Convertir columna amount a numérico, reemplazando errores con 0
+        df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0)
+
+        # Verificar que quedan datos después de la limpieza
+        if df.empty:
+            raise ValidationError(
+                "No hay datos válidos en el archivo después de la limpieza.")
 
         # Validación de columnas
         required_columns = ['default_code', 'code', 'amount']
@@ -37,7 +48,7 @@ class HrPayslipImportInput(models.TransientModel):
 
             # Obtener la regla salarial usando 'code'
             rule = self.env['hr.payslip.input.type'].search([('code', '=', row['code'])],
-                                                     limit=1)
+                                                            limit=1)
             if not rule:
                 raise ValidationError(
                     f"Regla salarial con código {row['code']} no encontrada.")

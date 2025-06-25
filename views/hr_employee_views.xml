@@ -1,0 +1,45 @@
+<odoo>
+    <!-- Vista mejorada del empleado con historial -->
+    <record id="view_hr_employee_form_schedule_history" model="ir.ui.view">
+        <field name="name">hr.employee.form.schedule.history</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <!-- Agregar fecha de último cambio junto al horario actual -->
+            <xpath expr="//field[@name='resource_calendar_id']" position="after">
+                <field name="last_schedule_change" string="Último cambio"/>
+            </xpath>
+
+            <xpath expr="//page[@name='hr_settings']" position="after">
+                <page string="Historial de horarios" name="schedule_history">
+                    <field name="schedule_history_ids">
+                        <tree decoration-info="is_current == True" editable="bottom">
+                            <field name="previous_calendar_id" string="Horario anterior"/>
+                            <field name="resource_calendar_id" string="Horario actual"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="is_current" column_invisible="1"/>
+                            <field name="reason"/>
+                            <field name="changed_by"/>
+                            <button name="apply_current_schedule"
+                                    string="✅ Aplicar"
+                                    type="object"
+                                    class="btn-primary btn-sm"
+                                    invisible="is_current == True"
+                                    confirm="¿Aplicar este registro?"
+                                    help="Aplicar este registro como actual"/>
+                            <button name="copy_and_create_schedule"
+                                    string="📝 Copiar"
+                                    type="object"
+                                    class="btn-secondary btn-sm"
+                                    invisible="is_current == True"
+                                    confirm="¿Crear nuevo desde hoy?"
+                                    help="Crear nuevo registro desde hoy"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

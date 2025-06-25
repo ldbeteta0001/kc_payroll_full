@@ -17,8 +17,12 @@ from odoo.tools.safe_eval import safe_eval
 
 _logger = logging.getLogger(__name__)
 
+
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
+
+    # MODIFICACIÓN PARA TU MÉTODO _get_worked_day_lines_values
+    # Agregar filtro de días laborables
 
     def _get_worked_day_lines_values(self, domain=None):
         self.ensure_one()
@@ -32,59 +36,120 @@ class HrPayslip(models.Model):
 
         # Buscar los tipos de entrada de trabajo por código
         attendance_work_entry_type = self.env['hr.work.entry.type'].search(
-            [('code', '=', 'WORKED100')], limit=1)
-        overtime_work_entry_type = self.env['hr.work.entry.type'].search(
-            [('code', '=', 'OVERTIME')], limit=1)
+            [('code', '=', 'WORK100')], limit=1)
 
-        # Obtener asistencias para calcular las horas trabajadas dentro y fuera del horario laboral
-        attendances = self.env['hr.attendance'].search([
+        # Buscar tipos de entrada para horas extras por franjas
+        he25_work_entry_type = self.env['hr.work.entry.type'].search(
+            [('code', '=', 'HE25')], limit=1)
+        he50_work_entry_type = self.env['hr.work.entry.type'].search(
+            [('code', '=', 'HE50')], limit=1)
+        he75_work_entry_type = self.env['hr.work.entry.type'].search(
+            [('code', '=', 'HE75')], limit=1)
+
+        # Usar un conjunto para almacenar los tipos de trabajo ya procesados
+        processed_entry_types = set()
+
+        # FILTRAR ASISTENCIAS SOLO DE LUNES A VIERNES
+        all_attendances = self.env['hr.attendance'].search([
             ('employee_id', '=', self.employee_id.id),
             ('check_in', '>=', self.date_from),
             ('check_out', '<=', self.date_to),
         ])
 
-        # Sumar las horas dentro y fuera del horario laboral
-        in_work_hours = sum(att.in_work_hours for att in attendances)
-        out_work_hours = sum(att.out_work_hours for att in attendances)
+        # Filtrar solo días laborables (lunes=0 a viernes=4)
+        weekday_attendances = []
+        for att in all_attendances:
+            if att.check_in:
+                weekday = att.check_in.weekday()  # 0=lunes, 6=domingo
+                if 0 <= weekday <= 5:  # lunes a viernes
+                    weekday_attendances.append(att)
 
-        # Línea para WORKED100 (horas dentro del horario laboral)
+        print("Asistencias filtradas (lun-vie):", len(weekday_attendances))
+
+        # Sumar las horas dentro del horario laboral (solo días laborables)
+        in_work_hours = sum(att.worked_hours for att in weekday_attendances)
+        print('HORAS DE ENTRADA (lun-vie):', in_work_hours)
+
+        # Calcular totales de horas extras por franja (solo días laborables)
+        total_he25 = sum(att.he25 for att in weekday_attendances)
+        total_he50 = sum(att.he50 for att in weekday_attendances)
+        total_he75 = sum(att.he75 for att in weekday_attendances)
+
+        print('HORAS EXTRA 25% (lun-vie):', total_he25)
+        print('HORAS EXTRA 50% (lun-vie):', total_he50)
+        print('HORAS EXTRA 75% (lun-vie):', total_he75)
+
+        # Línea para WORK100 (horas dentro del horario laboral - solo días laborables)
         if in_work_hours > 0 and attendance_work_entry_type:
-            in_work_days = round(in_work_hours / hours_per_day, 5) if hours_per_day else 0
-            in_work_rounded = self._round_days(attendance_work_entry_type, in_work_days)
-            res.append({
-                'sequence': attendance_work_entry_type.sequence,
-                'work_entry_type_id': attendance_work_entry_type.id,
-                'number_of_days': in_work_rounded,
-                'number_of_hours': in_work_hours,
-            })
+            if attendance_work_entry_type.id not in processed_entry_types:
+                in_work_days = round(in_work_hours / hours_per_day,
+                                     5) if hours_per_day else 0
+                in_work_rounded = self._round_days(attendance_work_entry_type,
+                                                   in_work_days)
+                res.append({
+                    'sequence': attendance_work_entry_type.sequence,
+                    'work_entry_type_id': attendance_work_entry_type.id,
+                    'number_of_days': in_work_rounded,
+                    'number_of_hours': in_work_hours,
+                })
+                processed_entry_types.add(attendance_work_entry_type.id)
 
-        # Línea para OVERTIME (horas fuera del horario laboral)
-        if out_work_hours > 0 and overtime_work_entry_type:
-            out_work_days = round(out_work_hours / hours_per_day,
-                                  5) if hours_per_day else 0
-            out_work_rounded = self._round_days(overtime_work_entry_type, out_work_days)
-            res.append({
-                'sequence': overtime_work_entry_type.sequence,
-                'work_entry_type_id': overtime_work_entry_type.id,
-                'number_of_days': out_work_rounded,
-                'number_of_hours': out_work_hours,
-            })
+        # Línea para Horas Extra 25% (solo días laborables)
+        if total_he25 > 0 and he25_work_entry_type:
+            if he25_work_entry_type.id not in processed_entry_types:
+                he25_days = round(total_he25 / hours_per_day, 5) if hours_per_day else 0
+                he25_rounded = self._round_days(he25_work_entry_type, he25_days)
+                res.append({
+                    'sequence': he25_work_entry_type.sequence,
+                    'work_entry_type_id': he25_work_entry_type.id,
+                    'number_of_days': he25_rounded,
+                    'number_of_hours': total_he25,
+                })
+                processed_entry_types.add(he25_work_entry_type.id)
 
-        # Lógica original para otras entradas de trabajo
+        # Línea para Horas Extra 50% (solo días laborables)
+        if total_he50 > 0 and he50_work_entry_type:
+            if he50_work_entry_type.id not in processed_entry_types:
+                he50_days = round(total_he50 / hours_per_day, 5) if hours_per_day else 0
+                he50_rounded = self._round_days(he50_work_entry_type, he50_days)
+                res.append({
+                    'sequence': he50_work_entry_type.sequence,
+                    'work_entry_type_id': he50_work_entry_type.id,
+                    'number_of_days': he50_rounded,
+                    'number_of_hours': total_he50,
+                })
+                processed_entry_types.add(he50_work_entry_type.id)
+
+        # Línea para Horas Extra 75% (solo días laborables)
+        if total_he75 > 0 and he75_work_entry_type:
+            if he75_work_entry_type.id not in processed_entry_types:
+                he75_days = round(total_he75 / hours_per_day, 5) if hours_per_day else 0
+                he75_rounded = self._round_days(he75_work_entry_type, he75_days)
+                res.append({
+                    'sequence': he75_work_entry_type.sequence,
+                    'work_entry_type_id': he75_work_entry_type.id,
+                    'number_of_days': he75_rounded,
+                    'number_of_hours': total_he75,
+                })
+                processed_entry_types.add(he75_work_entry_type.id)
+
+        # Resto de la lógica original...
         for work_entry_type_id, hours in work_hours_ordered:
             work_entry_type = self.env['hr.work.entry.type'].browse(work_entry_type_id)
-            days = round(hours / hours_per_day, 5) if hours_per_day else 0
-            if work_entry_type_id == biggest_work:
-                days += add_days_rounding
-            day_rounded = self._round_days(work_entry_type, days)
-            add_days_rounding += (days - day_rounded)
-            attendance_line = {
-                'sequence': work_entry_type.sequence,
-                'work_entry_type_id': work_entry_type_id,
-                'number_of_days': day_rounded,
-                'number_of_hours': hours,
-            }
-            res.append(attendance_line)
+            if work_entry_type.id not in processed_entry_types:
+                days = round(hours / hours_per_day, 5) if hours_per_day else 0
+                if work_entry_type_id == biggest_work:
+                    days += add_days_rounding
+                day_rounded = self._round_days(work_entry_type, days)
+                add_days_rounding += (days - day_rounded)
+                attendance_line = {
+                    'sequence': work_entry_type.sequence,
+                    'work_entry_type_id': work_entry_type_id,
+                    'number_of_days': day_rounded,
+                    'number_of_hours': hours,
+                }
+                res.append(attendance_line)
+                processed_entry_types.add(work_entry_type.id)
 
         # Ordenar las líneas por secuencia
         work_entry_type = self.env['hr.work.entry.type']

@@ -1,0 +1,43 @@
+<!-- views/attendance_report_views.xml -->
+<odoo>
+    <!-- Vista del Wizard -->
+    <record id="view_attendance_report_wizard" model="ir.ui.view">
+        <field name="name">attendance.report.wizard.form</field>
+        <field name="model">attendance.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte de Asistencias Excel">
+                <group>
+                    <group>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                    </group>
+                    <group>
+                        <field name="department_ids" widget="many2many_tags"/>
+                        <field name="employee_ids" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate_report" string="Descargar Excel"
+                            type="object" class="btn-primary" icon="fa-download"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción del Wizard -->
+    <record id="action_attendance_report_wizard" model="ir.actions.act_window">
+        <field name="name">Reporte de Asistencias Excel</field>
+        <field name="res_model">attendance.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_attendance_report_wizard"/>
+    </record>
+
+    <!-- Menú -->
+    <menuitem id="menu_attendance_report"
+              name="Reporte de Asistencias Excel"
+              parent="hr_attendance.menu_hr_attendance_reporting"
+              action="action_attendance_report_wizard"
+              sequence="10"/>
+</odoo>

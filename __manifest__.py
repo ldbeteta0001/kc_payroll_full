@@ -18,13 +18,25 @@
     'version': '17.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'hr', 'hr_payroll'],
+    'depends': ['base', 'hr', 'hr_contract', 'hr_payroll', 'hr_attendance'],
 
+    'external_dependencies': {
+        'python': ['xlsxwriter'],
+    },
     # always loaded
     'data': [
         'security/ir.model.access.csv',
         'wizard/hr_payslip_import_input.xml',
-        # 'views/menu.xml',
+        'wizard/payrroll_excel_wizard.xml',
+        'wizard/payment_report_excel.xml',
+        'wizard/hr_attendance_import_views.xml',
+        'views/resource_calendar.xml',
+        'views/hr_contract_views.xml',
+        'views/hr_attenadnce_views.xml',
+        'wizard/change_schedule_wizard_views.xml',
+        'views/hr_employee_schedule_history_views.xml',
+        'views/hr_employee_views.xml',
+        'wizard/attendance_report_views.xml',
     ],
     'installable': True,
     'application': True,

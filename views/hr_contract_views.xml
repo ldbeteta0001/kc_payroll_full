@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+    <record id="hr_contract_form_view" model="ir.ui.view">
+        <field name="name">hr.contract.form.view</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="hn_deductions" string="Deducciones Honduras">
+                    <group>
+                        <group name="group_isr" string="ISR">
+                            <field name="apply_isr" widget="boolean_toggle"/>
+                            <field name="amount_fixed_isr" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="apply_isr == False"/>
+                        </group>
+                        <group name="group_educativo" string="EDUCATIVO">
+                            <field name="apply_education" widget="boolean_toggle"/>
+                            <field name="amount_fixed_education" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="apply_isr == False"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group name="group_colegiatura" string="COLEGIACION">
+                            <field name="apply_colegiatura" widget="boolean_toggle"/>
+                            <field name="amount_fixed_colegiatura" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="apply_isr == False"/>
+                        </group>
+                        <group name="group_pension" string="PENSION">
+                            <field name="apply_pension" widget="boolean_toggle"/>
+                            <field name="amount_fixed_pension" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="apply_isr == False"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

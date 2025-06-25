@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_resource_calendar_form_inherit_nocturna" model="ir.ui.view">
+        <field name="name">resource.calendar.form.inherit.nocturna</field>
+        <field name="model">resource.calendar</field>
+        <!-- Heredamos la vista original de resource.calendar -->
+        <field name="inherit_id" ref="resource.resource_calendar_form"/>
+        <field name="arch" type="xml">
+            <!-- Ubicamos el campo justo después del nombre del calendario -->
+            <xpath expr="//field[@name='resource_calendar_type_id']" position="after">
+                <field name="nocturna"/>
+                <field name="es_nomina_semanal"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
